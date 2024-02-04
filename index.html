@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner</title>
+    <style>
+        #video-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+        }
+        #video {
+            width: 100%;
+            height: auto;
+        }
+        #scan-result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Scanner</h1>
+    <div id="video-container">
+        <video id="video" playsinline></video>
+    </div>
+    <div id="scan-result"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const scanResultElem = document.getElementById('scan-result');
+
+        // Request permission to access the camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then((stream) => {
+                video.srcObject = stream;
+                video.play();
+                scanQRCode();
+            })
+            .catch((err) => {
+                console.error('Error accessing the camera: ', err);
+            });
+
+        // Function to scan the QR code
+        function scanQRCode() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Check if the video metadata has loaded
+            video.addEventListener('loadedmetadata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                setInterval(() => {
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    if (code) {
+                        scanResultElem.innerText = 'QR Code Detected: ' + code.data;
+                    }
+                }, 100);
+            });
+        }
+    </script>
+
+    <!-- Include the QR code scanning library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+</body>
+</html>
